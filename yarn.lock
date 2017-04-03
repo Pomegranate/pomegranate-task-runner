@@ -2,25 +2,26 @@
 # yarn lockfile v1
 
 
-bluebird@^3.3.3, bluebird@^3.4.1:
+bluebird@^3.3.3, bluebird@^3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.0.tgz#791420d7f551eea2897453a8a77653f96606d67c"
 
-contingency@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/contingency/-/contingency-1.0.1.tgz#4641e5b83d8908344c59e93c165380ad1a53c365"
+contingency@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/contingency/-/contingency-1.2.0.tgz#105c30dd28f02ca30470d76d0991bd8b434486b1"
   dependencies:
-    bluebird "^3.4.1"
-    debug "^2.2.0"
-    lodash "^4.13.1"
+    bluebird "^3.5.0"
+    debug "^2.6.3"
+    lodash "^4.17.4"
+    uuid "^3.0.1"
 
-debug@^2.2.0:
+debug@^2.6.3:
   version "2.6.3"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.3.tgz#0f7eb8c30965ec08c72accfa0130c8b79984141d"
   dependencies:
     ms "0.7.2"
 
-lodash@^4.13.1, lodash@^4.6.1:
+lodash@^4.17.4, lodash@^4.6.1:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -39,3 +40,7 @@ ms@0.7.2:
 path-parse@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.5.tgz#3c1adf871ea9cd6c9431b6ea2bd74a0ff055c4c1"
+
+uuid@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.0.1.tgz#6544bba2dfda8c1cf17e629a3a305e2bb1fee6c1"

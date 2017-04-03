@@ -24,7 +24,7 @@
     "Contingency"
   ],
   "dependencies": {
-    "contingency": "^1.0.1",
+    "contingency": "^1.2.0",
     "magnum-plugin-utils": "^1.3.1"
   }
 }
