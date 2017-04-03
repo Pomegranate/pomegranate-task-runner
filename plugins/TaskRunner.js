@@ -65,25 +65,29 @@ exports.plugin = {
           let n = results.name
           let et = results.elapsedTime / 1000
           let tc = results.transitions
-          plugin.Logger.log(`Finished ${n} in ${et}s with ${tc} state transitions.`);
+          plugin.Logger.log(`${results.uuid}: ${n} finished in ${et}s with ${tc} state transitions.`);
           self.ack(msg)
         })
 
-        runTask.on('error', function(err) {
-          Logger.error(err)
-          plugin.Logger.error('There has been an error processing this task.')
+        runTask.on('error', function(result) {
+          let uuid = result.instance.uuid
+          let n = result.instance.name
+          let et = result.instance.elapsedTime / 1000
+          let tc = result.instance.transitions
+          let emsg = result.error.message
+          plugin.Logger.error(`${uuid}: ${n} encountered an unrecoverable error: ${emsg}. (In ${et}s with ${tc} state transitions)`)
           self.ack(msg)
         })
 
         runTask.start().then(function(result) {
-          plugin.Logger.log(`Taskname: ${result.name} started at ${new Date(result.startTime).toISOString()}.`)
+          plugin.Logger.log(`${result.uuid}: ${result.name} started at ${new Date(result.startTime).toISOString()}.`)
         }).catch(function(err) {
           Logger.error(err);
         })
         return
       }
 
-      console.log('Message string was null, discarding')
+      plugin.Logger.warn('Message string was null, discarding')
       self.ack(msg)
 
     }
