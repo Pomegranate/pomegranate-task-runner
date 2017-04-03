@@ -1,0 +1,30 @@
+{
+  "name": "pomegranate-task-runner",
+  "version": "0.0.0",
+  "description": "A RabbitMQ based, state machine driven task runner for the Pomegranate framework.",
+  "main": "index.js",
+  "author": "Jim Bulkowski <jim.b@paperelectron.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Pomegranate/pomegranate-task-runner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pomegranate/pomegranate-task-runner/issues"
+  },
+  "homepage": "https://github.com/Pomegranate/pomegranate-task-runner#readme",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Pomegranate",
+    "Plugin",
+    "RabbitMQ",
+    "Tasks",
+    "Contingency"
+  ],
+  "dependencies": {
+    "contingency": "^1.0.1",
+    "magnum-plugin-utils": "^1.3.1"
+  }
+}

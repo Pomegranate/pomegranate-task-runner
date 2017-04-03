@@ -1,0 +1,10 @@
+/node_modules/*
+.nyc_output/*
+coverage/*
+.idea/
+*.off/
+*.sql
+*.sqlite
+*.log
+.DS_Store
+.npmrc
