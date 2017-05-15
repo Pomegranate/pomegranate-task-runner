@@ -18,16 +18,17 @@
 
 "use strict";
 
-var util = require('magnum-plugin-utils')
-var Contingency = require('contingency')
-var Promise = util.bluebird
-var _ = util.lodash
-var path = require('path')
+const util = require('magnum-plugin-utils')
+const Contingency = require('contingency')
+const Promise = util.bluebird
+const _ = util.lodash
+const path = require('path')
 
 
 exports.options = {
   workDir: './Machines',
   statesDir: './states',
+  abstractedStatesDir: './_abstractedStates'
 }
 
 exports.metadata = {
@@ -38,22 +39,78 @@ exports.metadata = {
 
 exports.plugin = {
   load: function(inject, loaded) {
-    var workDir = this.options.workDir
-    var statesDir = this.options.statesDir
+    let workDir = this.options.workDir
+    let statesDir = this.options.statesDir
+    let abstractedStatesDir = this.options.abstractedStatesDir
+    let abstractedStates  = path.join(workDir, abstractedStatesDir)
 
-    util.fileList(workDir, {directories: true})
-      .then(function(dirs) {
+    util.fileList(abstractedStates)
+      .then((files) => {
+        this.Logger.log(`Loading Abstracted states from: ${abstractedStates}`)
 
-        return Promise.map(dirs, function(dir) {
+        return Promise.map(files, (f)=>{
+          let fn = require(path.join(abstractedStates, f))
+          let as = inject(fn)
+          this.Logger.log(`Abstracted State "${as.name}" loaded.`)
+          return as
+        })
+      })
+      .then((injectedAbstractStates) => {
+        return _.keyBy(injectedAbstractStates, 'name')
+      })
+      .then((abstractStatesObj) => {
+        return Promise.props({
+          machineDirs: util.fileList(workDir, {directories: true}),
+          abstractStates: abstractStatesObj
+        })
+      })
+      .then((setup) => {
+        _.remove(setup.machineDirs, (d) => {
+          return (path.normalize(d) === path.normalize(abstractedStatesDir));
+        })
+
+        return Promise.map(setup.machineDirs, (dir) => {
+
           var thisMachine = path.join(workDir, dir)
-          var thisMachineStates = path.join(thisMachine, statesDir)
+
+          let MachineConfig = require(thisMachine)
+          let machineStatesDir = MachineConfig.statesDir || './states'
+
+          let thisMachineStates = path.join(thisMachine, machineStatesDir)
+
           return util.fileList(thisMachineStates)
-            .then(function(files) {
-              var injectedStates = _.map(files, function(file) {
-                return inject(require(path.join(thisMachineStates, file)))
+            .then((files) => {
+
+              let ReadyMachine = require(thisMachine)
+              let absStates = ReadyMachine.abstractedStates
+
+              let injectedStates = _.map(files, (file)=> {
+                let i = inject(require(path.join(thisMachineStates, file)))
+                let replacer = setup.abstractStates[i.name]
+                if(_.isObject(replacer)){
+                  this.Logger.warn(`${ReadyMachine.name}, local state "${i.name}" present, being replaced by abstracted state based on config.`)
+                  return replacer
+                }
+                return i
               })
-              var ReadyMachine = require(thisMachine)
+
+              if(absStates.length){
+                let tmp = _.map(absStates, n => ({name: n}) )
+                let neededAbstractedStates = _.differenceBy(tmp, injectedStates, 'name')
+                _.each(neededAbstractedStates, (s) => {
+                  let include = setup.abstractStates[s.name]
+                  if(_.isObject(include)){
+                    this.Logger.log(`${ReadyMachine.name} using abstracted state "${s.name}".`)
+                    injectedStates.push(include)
+                  } else {
+                    throw new Error(`Abstracted state "${s.name}" missing but required by ${ReadyMachine.name}`)
+                  }
+                })
+              }
+
+
               ReadyMachine.states = injectedStates
+
               return ReadyMachine
             })
         })
@@ -67,6 +124,9 @@ exports.plugin = {
         })
 
         loaded(null, keyed)
+      })
+      .catch((err) => {
+        loaded(err)
       })
 
   },
