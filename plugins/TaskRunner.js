@@ -14,7 +14,7 @@ const Contingency = require('contingency')
 
 
 exports.options = {
-  taskqueue: 'taskqueue'
+  taskqueue: 'my.task.queue'
 }
 exports.metadata = {
   name: 'MachineRunner',
@@ -49,8 +49,18 @@ exports.plugin = {
           return
         }
 
-        let currentTaskName = parsedMsg.taskName
+        // console.log(parsedMsg);
+        let correlationId = msg.properties.correlationId
+        let replyTo = msg.properties.replyTo
 
+        if(correlationId && replyTo){
+          parsedMsg.RPCmetadata = {
+            correlationId: correlationId,
+            replyTo: replyTo
+          }
+        }
+
+        let currentTaskName = parsedMsg.taskName
         let task = Machines[currentTaskName]
 
         if(!task) {
@@ -79,11 +89,12 @@ exports.plugin = {
           self.ack(msg)
         })
 
-        runTask.start().then(function(result) {
-          plugin.Logger.log(`${result.uuid}: ${result.name} started at ${new Date(result.startTime).toISOString()}.`)
-        }).catch(function(err) {
-          Logger.error(err);
-        })
+        runTask.start()
+          .then(function(r) {
+            plugin.Logger.log(`${r.uuid}: ${r.name} started at ${new Date(r.startTime).toISOString()}.`)
+          }).catch(function(err) {
+            Logger.error(err);
+          })
         return
       }
 

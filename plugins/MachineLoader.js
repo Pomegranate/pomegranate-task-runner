@@ -27,20 +27,19 @@ const path = require('path')
 
 exports.options = {
   workDir: './Machines',
-  statesDir: './states',
   abstractedStatesDir: './_abstractedStates'
 }
 
 exports.metadata = {
   name: 'MachineLoader',
   type: 'service',
-  param: 'Machines'
+  param: 'Machines',
+  optional: ['TaskUtilities']
 }
 
 exports.plugin = {
   load: function(inject, loaded) {
     let workDir = this.options.workDir
-    let statesDir = this.options.statesDir
     let abstractedStatesDir = this.options.abstractedStatesDir
     let abstractedStates  = path.join(workDir, abstractedStatesDir)
 
@@ -65,6 +64,11 @@ exports.plugin = {
         })
       })
       .then((setup) => {
+
+        /*
+         * Remove Abstracted States directory from workdir to prevent it from attempting to load
+         * it as a state machine.
+         */
         _.remove(setup.machineDirs, (d) => {
           return (path.normalize(d) === path.normalize(abstractedStatesDir));
         })
@@ -74,6 +78,10 @@ exports.plugin = {
           var thisMachine = path.join(workDir, dir)
 
           let MachineConfig = require(thisMachine)
+
+          /*
+           Set the search path for individual states from the state index.js file.
+           */
           let machineStatesDir = MachineConfig.statesDir || './states'
 
           let thisMachineStates = path.join(thisMachine, machineStatesDir)
@@ -84,6 +92,11 @@ exports.plugin = {
               let ReadyMachine = require(thisMachine)
               let absStates = ReadyMachine.abstractedStates
 
+              /*
+               * Run our states through the injector, the returned object has its state name.
+               * Match the state name against the array of abstracted states, and replace with the
+               * global version if both are present.
+               */
               let injectedStates = _.map(files, (file)=> {
                 let i = inject(require(path.join(thisMachineStates, file)))
                 let replacer = setup.abstractStates[i.name]
@@ -94,9 +107,14 @@ exports.plugin = {
                 return i
               })
 
+              /*
+               * Include any missing states from the abstracted states object, throw if requested
+               * abstracted state is missing.
+               */
               if(absStates.length){
                 let tmp = _.map(absStates, n => ({name: n}) )
                 let neededAbstractedStates = _.differenceBy(tmp, injectedStates, 'name')
+
                 _.each(neededAbstractedStates, (s) => {
                   let include = setup.abstractStates[s.name]
                   if(_.isObject(include)){
