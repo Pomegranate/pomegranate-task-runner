@@ -90,7 +90,6 @@ exports.plugin = {
             .then((files) => {
 
               let ReadyMachine = require(thisMachine)
-              console.log(ReadyMachine);
               let absStates = ReadyMachine.abstractedStates || []
 
               /*
