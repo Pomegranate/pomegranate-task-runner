@@ -90,7 +90,8 @@ exports.plugin = {
             .then((files) => {
 
               let ReadyMachine = require(thisMachine)
-              let absStates = ReadyMachine.abstractedStates
+              console.log(ReadyMachine);
+              let absStates = ReadyMachine.abstractedStates || []
 
               /*
                * Run our states through the injector, the returned object has its state name.
