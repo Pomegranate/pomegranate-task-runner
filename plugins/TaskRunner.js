@@ -7,6 +7,7 @@
 
 'use strict';
 const Contingency = require('contingency')
+const debug = require('debug')('pomegranate:taskrunner')
 /**
  *
  * @module TaskRunner
@@ -48,7 +49,7 @@ exports.plugin = {
           self.ack(msg)
           return
         }
-
+        debug(parsedMsg)
         // console.log(parsedMsg);
         let correlationId = msg.properties.correlationId
         let replyTo = msg.properties.replyTo
@@ -85,6 +86,7 @@ exports.plugin = {
           let et = result.instance.elapsedTime / 1000
           let tc = result.instance.transitions
           let emsg = result.error.message
+          debug(result.error)
           plugin.Logger.error(`${uuid}: ${n} encountered an unrecoverable error: ${emsg}. (In ${et}s with ${tc} state transitions)`)
           self.ack(msg)
         })
