@@ -50,7 +50,6 @@ exports.plugin = {
         Logger.log(`Loading Abstracted states from: ${abstractedStates}`)
 
         return Promise.map(files, (f)=>{
-          console.log(f)
           let fn = require(f.path)
           let as = Injector.inject(fn)
           Logger.log(`Abstracted State "${as.name}" loaded.`)
