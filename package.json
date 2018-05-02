@@ -1,6 +1,6 @@
 {
   "name": "pomegranate-task-runner",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A RabbitMQ based, state machine driven task runner for the Pomegranate framework.",
   "main": "index.js",
   "author": "Jim Bulkowski <jim.b@paperelectron.com>",
