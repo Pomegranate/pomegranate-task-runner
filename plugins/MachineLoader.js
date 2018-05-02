@@ -31,6 +31,7 @@ exports.options = {
 }
 
 exports.metadata = {
+  frameworkVersion: 6,
   name: 'MachineLoader',
   type: 'service',
   param: 'Machines',
@@ -38,19 +39,21 @@ exports.metadata = {
 }
 
 exports.plugin = {
-  load: function(inject, loaded) {
-    let workDir = this.options.workDir
-    let abstractedStatesDir = this.options.abstractedStatesDir
+  load: function(Options, PluginFiles, Injector, Logger) {
+
+    let workDir = Options.workDir
+    let abstractedStatesDir = Options.abstractedStatesDir
     let abstractedStates  = path.join(workDir, abstractedStatesDir)
 
-    util.fileList(abstractedStates)
+    return PluginFiles.ctors.fileList(abstractedStates)()
       .then((files) => {
-        this.Logger.log(`Loading Abstracted states from: ${abstractedStates}`)
+        Logger.log(`Loading Abstracted states from: ${abstractedStates}`)
 
         return Promise.map(files, (f)=>{
-          let fn = require(path.join(abstractedStates, f))
-          let as = inject(fn)
-          this.Logger.log(`Abstracted State "${as.name}" loaded.`)
+          console.log(f)
+          let fn = require(f.path)
+          let as = Injector.inject(fn)
+          Logger.log(`Abstracted State "${as.name}" loaded.`)
           return as
         })
       })
@@ -98,10 +101,10 @@ exports.plugin = {
                * global version if both are present.
                */
               let injectedStates = _.map(files, (file)=> {
-                let i = inject(require(path.join(thisMachineStates, file)))
+                let i = Injector.inject(require(path.join(thisMachineStates, file)))
                 let replacer = setup.abstractStates[i.name]
                 if(_.isObject(replacer)){
-                  this.Logger.warn(`${ReadyMachine.name}, local state "${i.name}" present, being replaced by abstracted state based on config.`)
+                  Logger.warn(`${ReadyMachine.name}, local state "${i.name}" present, being replaced by abstracted state based on config.`)
                   return replacer
                 }
                 return i
@@ -118,7 +121,7 @@ exports.plugin = {
                 _.each(neededAbstractedStates, (s) => {
                   let include = setup.abstractStates[s.name]
                   if(_.isObject(include)){
-                    this.Logger.log(`${ReadyMachine.name} using abstracted state "${s.name}".`)
+                    Logger.log(`${ReadyMachine.name} using abstracted state "${s.name}".`)
                     injectedStates.push(include)
                   } else {
                     throw new Error(`Abstracted state "${s.name}" missing but required by ${ReadyMachine.name}`)
@@ -138,20 +141,11 @@ exports.plugin = {
         var keyed = _.keyBy(loadedStateMachines, 'name')
 
         Object.keys(keyed).forEach((k) => {
-          this.Logger.log(`${k} machine ready.`)
+          Logger.log(`${k} machine ready.`)
         })
 
-        loaded(null, keyed)
-      })
-      .catch((err) => {
-        loaded(err)
+        return keyed
       })
 
-  },
-  start: function(done) {
-    done()
-  },
-  stop: function(done) {
-    done()
   }
 }

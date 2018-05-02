@@ -18,17 +18,18 @@ exports.options = {
   taskqueue: 'my.task.queue'
 }
 exports.metadata = {
+  frameworkVersion: 6,
   name: 'MachineRunner',
   type: 'action',
   depends: ['Machines', 'RabbitConnection']
 }
 exports.plugin = {
-  load: function(inject, loaded) {
-    this.RabbitConnection = inject('RabbitConnection')
-    let Machines = inject('Machines')
-    let Logger = inject('Logger')
+  load: function(Options, PluginContext, RabbitConnection, Machines, Logger, inject, loaded) {
+    // this.RabbitConnection = inject('RabbitConnection')
+    // let Machines = inject('Machines')
+    // let Logger = inject('Logger')
     let plugin = this
-    this.TaskHandler = function(msg) {
+    PluginContext.TaskHandler = function(msg) {
       var self = this
 
       if(msg !== null) {
@@ -45,7 +46,7 @@ exports.plugin = {
           }
         }
         catch (e) {
-          plugin.Logger.warn(`Unable to parse message "${msg.content}", ${e.message}`);
+          Logger.warn(`Unable to parse message "${msg.content}", ${e.message}`);
           self.ack(msg)
           return
         }
@@ -65,7 +66,7 @@ exports.plugin = {
         let task = Machines[currentTaskName]
 
         if(!task) {
-          plugin.Logger.warn(`Taskname -- ${currentTaskName} not found.`)
+          Logger.warn(`Taskname -- ${currentTaskName} not found.`)
           self.ack(msg)
           return
         }
@@ -87,40 +88,36 @@ exports.plugin = {
           let tc = result.instance.transitions
           let emsg = result.error.message
           debug(result.error)
-          plugin.Logger.error(`${uuid}: ${n} encountered an unrecoverable error: ${emsg}. (In ${et}s with ${tc} state transitions)`)
+          Logger.error(`${uuid}: ${n} encountered an unrecoverable error: ${emsg}. (In ${et}s with ${tc} state transitions)`)
           self.ack(msg)
         })
 
         runTask.start()
           .then(function(r) {
-            plugin.Logger.log(`${r.uuid}: ${r.name} started at ${new Date(r.startTime).toISOString()}.`)
+            Logger.log(`${r.uuid}: ${r.name} started at ${new Date(r.startTime).toISOString()}.`)
           }).catch(function(err) {
             Logger.error(err);
           })
         return
       }
 
-      plugin.Logger.warn('Message string was null, discarding')
+      Logger.warn('Message string was null, discarding')
       self.ack(msg)
 
     }
 
-    this.RabbitConnection.createChannel()
+    return RabbitConnection.createChannel()
       .then((channel) => {
-        this.TaskChannel = channel
-        channel.assertQueue(this.options.taskqueue, {durable: true})
-        loaded(null, null)
+        PluginContext.TaskChannel = channel
+        channel.assertQueue(Options.taskqueue, {durable: true})
+        return true
       })
 
   },
-  start: function(done) {
+  start: function(Options, PluginContext) {
     var self = this
 
-    this.TaskChannel.consume(this.options.taskqueue, this.TaskHandler.bind(this.TaskChannel))
+    PluginContext.TaskChannel.consume(Options.taskqueue, PluginContext.TaskHandler.bind(PluginContext.TaskChannel))
 
-    done(null)
-  },
-  stop: function(done) {
-    done()
   }
 }
