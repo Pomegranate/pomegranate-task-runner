@@ -25,13 +25,8 @@ exports.metadata = {
 }
 exports.plugin = {
   load: function(Options, PluginContext, RabbitConnection, Machines, Logger, inject, loaded) {
-    // this.RabbitConnection = inject('RabbitConnection')
-    // let Machines = inject('Machines')
-    // let Logger = inject('Logger')
-    let plugin = this
     PluginContext.TaskHandler = function(msg) {
       var self = this
-
       if(msg !== null) {
         let parsedMsg
         try {
@@ -77,7 +72,7 @@ exports.plugin = {
           let n = results.name
           let et = results.elapsedTime / 1000
           let tc = results.transitions
-          plugin.Logger.log(`${results.uuid}: ${n} finished in ${et}s with ${tc} state transitions.`);
+          Logger.log(`${results.uuid}: ${n} finished in ${et}s with ${tc} state transitions.`);
           self.ack(msg)
         })
 
